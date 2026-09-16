@@ -1,0 +1,16 @@
+{
+  "name": "phasmo-hunter",
+  "version": "1.0.0",
+  "description": "Phasmophobia ghost identification triage tool (30 ghosts, v0.19.x data)",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "build": "node build.js",
+    "check": "npm test && npm run build"
+  },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "private": true,
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
+}
