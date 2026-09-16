@@ -1,0 +1,154 @@
+<title>Spectre Triage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/*__STYLES__*/
+</style>
+
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <h1>Spectre Triage</h1>
+      <small id="patch-label">v0.19 · 30 ghosts</small>
+    </div>
+    <div class="seg" id="difficulty-seg" role="group" aria-label="Difficulty"></div>
+    <div class="seg" id="map-seg" role="group" aria-label="Map size"></div>
+    <button class="btn quiet" id="reset-btn" type="button" title="Clear this contract">Reset</button>
+  </header>
+
+  <!-- ───────── TRIAGE VIEW ───────── -->
+  <main id="view-triage" class="view grid">
+    <section class="panel span-7">
+      <h2>Journal evidence <span class="k" id="slots-label"></span></h2>
+      <div class="evidence-grid" id="evidence-grid"></div>
+      <p class="hint">Tap cycles <b>unknown → found → ruled out</b>. Keys <b>1–7</b> do the same; <b>R</b> resets. Faded tiles cannot occur for any remaining ghost.</p>
+    </section>
+
+    <section class="panel span-5">
+      <h2>Next best test <span class="k">by information gain</span></h2>
+      <div class="tests" id="tests"></div>
+    </section>
+
+    <section class="panel span-12">
+      <h2>Possible ghosts <span class="k" id="count-label"></span></h2>
+      <div class="ghost-list" id="ghost-list"></div>
+      <details class="eliminated" id="eliminated"><summary></summary><div class="ghost-list" id="eliminated-list"></div></details>
+    </section>
+
+    <section class="panel span-5">
+      <h2>Hunt &amp; speed readings</h2>
+      <div class="row">
+        <div class="field">
+          <label for="hunt-sanity">Avg sanity when hunt began (%)</label>
+          <input id="hunt-sanity" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="e.g. 68">
+        </div>
+        <div class="field">
+          <label for="speed-input">Footstep speed (m/s)</label>
+          <input id="speed-input" type="number" min="0.3" max="4" step="0.05" inputmode="decimal" placeholder="from Speed tab">
+        </div>
+      </div>
+      <p class="hint" id="hunt-hint"></p>
+    </section>
+
+    <section class="panel span-7">
+      <h2>Behaviour observed <span class="k">soft evidence</span></h2>
+      <div class="filters">
+        <div class="seg" id="tier-seg" role="group" aria-label="Detail level">
+          <button type="button" data-tier="all" aria-pressed="true">All</button>
+          <button type="button" data-tier="basic" aria-pressed="false">New blood</button>
+          <button type="button" data-tier="veteran" aria-pressed="false">Veteran</button>
+        </div>
+        <label class="calib" style="margin-left:auto"><input type="checkbox" id="relevant-only" checked> Only tests that still matter</label>
+      </div>
+      <div class="obs-list" id="obs-list"></div>
+    </section>
+  </main>
+
+  <!-- ───────── SPEED VIEW ───────── -->
+  <main id="view-speed" class="view grid" hidden>
+    <section class="panel span-7">
+      <h2>Footstep tap <span class="k">tap on every step</span></h2>
+      <div class="tap-wrap">
+        <button class="tap-btn" id="tap-btn" type="button" aria-label="Tap on each footstep">
+          <span class="big" id="tap-mps">—</span>
+          <span class="unit">m / s</span>
+          <span class="cue" id="tap-cue">Tap here (or press Space) in time with the footsteps</span>
+        </button>
+        <div class="readout">
+          <div><div class="v" id="tap-bpm">—</div><div class="l">BPM</div></div>
+          <div><div class="v" id="tap-count">0</div><div class="l">taps</div></div>
+          <div><div class="v" id="tap-vs">—</div><div class="l">vs you (1.6 walk · 3.0 sprint)</div></div>
+        </div>
+        <div class="scale" id="speed-scale"></div>
+        <div class="matches" id="speed-matches"></div>
+        <div class="row">
+          <button class="btn primary" id="tap-apply" type="button">Use this speed in triage</button>
+          <button class="btn quiet" id="tap-clear" type="button">Clear taps</button>
+        </div>
+        <label class="calib">Calibration <input type="range" id="calib" min="45" max="65" step="1"> <span id="calib-label"></span></label>
+        <p class="hint">Cadence-to-speed is a community approximation (≈54 BPM per m/s: 1.7 m/s ≈ 92 BPM, 3.0 m/s ≈ 162 BPM). Nudge the slider if a confirmed standard ghost reads off 1.7.</p>
+      </div>
+    </section>
+
+    <section class="panel span-5">
+      <h2>Conditional speed calculators</h2>
+      <div class="row">
+        <div class="field"><label for="hantu-temp">Hantu · room temp °C</label><input id="hantu-temp" type="number" step="1" value="5" inputmode="numeric"></div>
+        <div class="field"><label>Hantu speed</label><div class="readout"><div><div class="v" id="hantu-out">—</div><div class="l">m/s · no LoS ramp</div></div></div></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="thaye-age">Thaye · age (Ouija)</label><input id="thaye-age" type="number" min="0" max="10" step="1" value="0" inputmode="numeric"></div>
+        <div class="field"><label>Thaye</label><div class="readout"><div><div class="v" id="thaye-out">—</div><div class="l" id="thaye-thr">m/s</div></div></div></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="moroi-san">Moroi · avg sanity %</label><input id="moroi-san" type="number" min="0" max="100" step="1" value="30" inputmode="numeric"></div>
+        <div class="field"><label>Moroi base</label><div class="readout"><div><div class="v" id="moroi-out">—</div><div class="l" id="moroi-los">m/s (LoS max —)</div></div></div></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="deil-items">Deildegast · items moved</label><input id="deil-items" type="number" min="0" max="40" step="1" value="0" inputmode="numeric"></div>
+        <div class="field"><label>Deildegast</label><div class="readout"><div><div class="v" id="deil-out">—</div><div class="l">m/s · flat, no LoS</div></div></div></div>
+      </div>
+      <p class="hint" id="raiju-hint"></p>
+    </section>
+
+    <section class="panel span-12">
+      <h2>Speed &amp; sound database <span class="k">m/s · ≈BPM</span></h2>
+      <div class="table-wrap"><table id="speed-table"></table></div>
+    </section>
+  </main>
+
+  <!-- ───────── TIMERS VIEW ───────── -->
+  <main id="view-timers" class="view grid" hidden>
+    <section class="panel span-12">
+      <h2>Hunt clocks <span class="k" id="hunt-dur-label"></span></h2>
+      <div class="timers" id="timers"></div>
+      <p class="hint">Incense outside a hunt blocks hunting for <b>90 s</b> (Spirit 180 s · Demon 60 s). Incense during a hunt blinds the ghost for <b>5 s</b> (Moroi 7.5 s). Minimum gap between hunts <b>25 s</b> (Demon 20 s). Obambo starts Calm and flips 1 min after the exit door first opens, then every 2 min.</p>
+    </section>
+    <section class="panel span-12">
+      <h2>Hunt threshold matrix <span class="k">avg team sanity unless noted</span></h2>
+      <div class="table-wrap"><table id="threshold-table"></table></div>
+    </section>
+  </main>
+
+  <!-- ───────── JOURNAL VIEW ───────── -->
+  <main id="view-journal" class="view grid" hidden>
+    <section class="panel span-12">
+      <h2>Ghost journal <span class="k">tap a row for full tells</span></h2>
+      <div class="table-wrap"><table id="journal-table"></table></div>
+      <p class="footnote" id="sources"></p>
+    </section>
+  </main>
+
+  <div id="sheet-root"></div>
+</div>
+
+<nav class="nav" aria-label="Sections">
+  <button type="button" data-view="triage" aria-current="page">Triage <span class="badge" id="nav-count"></span></button>
+  <button type="button" data-view="speed">Speed</button>
+  <button type="button" data-view="timers">Timers</button>
+  <button type="button" data-view="journal">Journal</button>
+</nav>
+
+<script>
+/*__SCRIPTS__*/
+</script>
