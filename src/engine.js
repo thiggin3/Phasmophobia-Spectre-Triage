@@ -448,11 +448,73 @@ function huntDuration(mapSize, difficulty, { obamboAggressive = false } = {}) {
 /** Incense hunt-block time for a ghost id (seconds). */
 function incenseBlock(ghostId) { return byId[ghostId]?.incenseBlock ?? TIMERS.incenseBlockDefault; }
 
+/* ─────────────────── player vs ghost (can you outrun it?) ─────────────────── */
+
+/**
+ * Player movement constants (m/s). Sprint lasts 3 s then needs 5 s to recharge,
+ * so cycling sprint/walk averages out to TIMERS.playerSprintAverage.
+ */
+const PLAYER = {
+  walk: TIMERS.playerWalk,               // 1.6
+  sprint: TIMERS.playerSprint,           // 3.0 for 3 s
+  sprintAverage: TIMERS.playerSprintAverage, // 2.125 sustained by cycling
+  sprintSeconds: 3,
+  sprintCooldownSeconds: 5,
+};
+
+/**
+ * Verdict for one ghost speed.
+ *  level: 'walk'   — you can walk away from it
+ *         'sprint' — you can stay ahead indefinitely by cycling sprint
+ *         'burst'  — only a 3 s sprint burst gains ground; loop or hide
+ *         'hide'   — faster than your sprint; running is pointless
+ */
+function chaseVerdict(mps) {
+  if (!(mps > 0)) return { level: 'hide', label: '—', detail: 'No speed.' };
+  if (mps <= PLAYER.walk)
+    return { level: 'walk', label: 'Outwalk it', detail: `Slower than your ${PLAYER.walk} m/s walk — you can walk away and never sprint.` };
+  if (mps <= PLAYER.sprintAverage)
+    return { level: 'sprint', label: 'Outrun it (keep cycling sprint)', detail: `Faster than a walk but under your ${PLAYER.sprintAverage} m/s sprint-cycle average — sprint, walk, sprint and you keep the gap.` };
+  if (mps <= PLAYER.sprint)
+    return { level: 'burst', label: 'Only in bursts — loop or hide', detail: `Above your sustained ${PLAYER.sprintAverage} m/s; a 3 s sprint gains ground, the 5 s recharge loses it. Break line of sight and loop or hide.` };
+  return { level: 'hide', label: 'Cannot outrun — hide', detail: `Faster than your ${PLAYER.sprint} m/s sprint. Do not run in the open; hide or block line of sight immediately.` };
+}
+
+/**
+ * Full player-vs-ghost breakdown for a ghost: one verdict per named speed
+ * (base, each variant, and LoS maximum when the ghost ramps) plus an overall
+ * worst case. Used by the ghost card.
+ */
+function chaseProfile(ghost) {
+  const rows = [];
+  const seen = new Set();
+  const push = (label, mps) => {
+    const key = `${label}|${mps}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    rows.push({ label, mps: +mps.toFixed(3), verdict: chaseVerdict(mps) });
+  };
+  if (ghost.speed.variants && ghost.speed.variants.length) {
+    for (const v of ghost.speed.variants) push(v.label, v.mps);
+  } else {
+    push('Base', ghost.speed.base);
+  }
+  // LoS row only when it adds a speed not already listed (Jinn/Raiju cap at a listed variant).
+  if (ghost.speed.los && ghost.id !== 'mimic' && !rows.some(r => Math.abs(r.mps - ghost.speed.max) < 1e-6)) push('Full line-of-sight chase', ghost.speed.max);
+  if (ghost.id === 'mimic') push('Worst case (copying the fastest ghost)', ghost.speed.max);
+  const worst = chaseVerdict(ghost.speed.max);
+  return { rows, worst, player: PLAYER };
+}
+
+/** Human-friendly ordering of verdict levels, safest first. */
+const CHASE_LEVELS = ['walk', 'sprint', 'burst', 'hide'];
+
 export {
   DIFFICULTIES, HUNT_DURATION, RAIJU_RADIUS, OBSERVATIONS, BPM_PER_MPS,
   createState, evaluate, evidenceFeasible, observationsFeasible, huntSanityFeasible, speedFeasible,
   nextBestTests, finalFilter, splitScore,
   bpmToMps, mpsToBpm, tapsToBpm, matchSpeed,
   hantuSpeed, thayeAtAge, moroiSpeed, deildegastSpeed, raijuRadius, huntDuration, incenseBlock,
+  PLAYER, chaseVerdict, chaseProfile, CHASE_LEVELS,
   byId,
 };

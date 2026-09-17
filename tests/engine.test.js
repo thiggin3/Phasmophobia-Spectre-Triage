@@ -260,3 +260,58 @@ test('evidenceFeasible handles Sets and arrays alike', () => {
   assert.ok(!evidenceFeasible(spirit, [], ['emf'], 3));
   assert.ok(evidenceFeasible(spirit, [], ['emf'], 2));
 });
+
+/* ── player vs ghost ── */
+import { PLAYER, chaseVerdict, chaseProfile } from '../src/engine.js';
+
+test('player constants match the game (walk 1.6, sprint 3.0 for 3 s, 5 s recharge, 2.125 average)', () => {
+  assert.equal(PLAYER.walk, 1.6);
+  assert.equal(PLAYER.sprint, 3.0);
+  assert.equal(PLAYER.sprintSeconds, 3);
+  assert.equal(PLAYER.sprintCooldownSeconds, 5);
+  assert.equal(PLAYER.sprintAverage, 2.125);
+  // 3 s at 3.0 + 5 s at 1.6 over 8 s = 2.125
+  assert.ok(Math.abs((3 * 3.0 + 5 * 1.6) / 8 - PLAYER.sprintAverage) < 1e-9);
+});
+
+test('chaseVerdict tiers at the player speed boundaries', () => {
+  assert.equal(chaseVerdict(1.0).level, 'walk');     // Revenant searching
+  assert.equal(chaseVerdict(1.6).level, 'walk');     // equal to walk still counts as outwalkable
+  assert.equal(chaseVerdict(1.7).level, 'sprint');   // standard ghost base
+  assert.equal(chaseVerdict(2.125).level, 'sprint');
+  assert.equal(chaseVerdict(2.5).level, 'burst');    // Jinn / Raiju boost
+  assert.equal(chaseVerdict(2.805).level, 'burst');  // standard ghost at full LoS
+  assert.equal(chaseVerdict(3.0).level, 'burst');    // Revenant / Deildegast — equal to sprint
+  assert.equal(chaseVerdict(3.71).level, 'hide');    // Moroi at 0% sanity with LoS
+  assert.equal(chaseVerdict(0).level, 'hide');
+});
+
+test('chaseProfile lists every speed state and a worst case per ghost', () => {
+  const g = Object.fromEntries(GHOSTS.map(x => [x.id, x]));
+  const rev = chaseProfile(g.revenant);
+  assert.deepEqual(rev.rows.map(r => r.verdict.level), ['walk', 'burst']);
+  assert.equal(rev.worst.level, 'burst');
+  const spirit = chaseProfile(g.spirit);
+  assert.deepEqual(spirit.rows.map(r => r.label), ['Base', 'Full line-of-sight chase']);
+  assert.deepEqual(spirit.rows.map(r => r.verdict.level), ['sprint', 'burst']);
+  const moroi = chaseProfile(g.moroi);
+  assert.equal(moroi.worst.level, 'hide');
+  const hantu = chaseProfile(g.hantu);
+  assert.equal(hantu.rows.length, 6); // one per temperature bracket, no LoS row
+  assert.ok(hantu.rows.every(r => r.label !== 'Full line-of-sight chase'));
+  for (const ghost of GHOSTS) {
+    const p = chaseProfile(ghost);
+    assert.ok(p.rows.length >= 1, ghost.name);
+    assert.ok(['walk', 'sprint', 'burst', 'hide'].includes(p.worst.level), ghost.name);
+    for (const r of p.rows) assert.ok(typeof r.label === 'string' && r.label !== r.verdict.label, `${ghost.name} row label collided with verdict`);
+  }
+});
+
+test('chaseProfile omits a redundant LoS row when a variant already reaches the top speed', () => {
+  const g = Object.fromEntries(GHOSTS.map(x => [x.id, x]));
+  const jinn = chaseProfile(g.jinn);
+  assert.equal(jinn.rows.filter(r => r.label === 'Full line-of-sight chase').length, 0);
+  assert.equal(jinn.rows.length, 2);
+  const twins = chaseProfile(g.twins);
+  assert.equal(twins.rows.filter(r => r.label === 'Full line-of-sight chase').length, 1);
+});

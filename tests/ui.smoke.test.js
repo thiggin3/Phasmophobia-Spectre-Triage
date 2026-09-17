@@ -97,6 +97,12 @@ test('timers and journal views render tables and the ghost sheet opens', async (
   await page.locator('#journal-table tbody tr', { hasText: 'Deildegast' }).click();
   await page.waitForSelector('.sheet');
   assert.match(await page.locator('.sheet').textContent(), /0\.1 m\/s/);
+  // You-vs-the-ghost block: player speeds and a verdict per speed state.
+  const chase = await page.locator('.sheet .chase').textContent();
+  assert.match(chase, /walk at 1\.6 m\/s/);
+  assert.match(chase, /sprint at 3 m\/s for 3 s/);
+  assert.ok(await page.locator('.sheet .chase-row').count() >= 4, 'Deildegast should list its item-count speed states');
+  assert.match(await page.locator('.sheet .chase-row').first().textContent(), /0 items moved.*3 m\/s.*loop or hide/s);
   await page.keyboard.press('Escape');
   assert.equal(await page.locator('.sheet').count(), 0);
 });

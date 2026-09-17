@@ -219,11 +219,40 @@ function openSheet(g) {
       el('dt', {}, 'LoS speed-up'), el('dd', {}, g.speed.los ? `Yes — ramps to ×${LOS_MULTIPLIER} of base with sustained line of sight.` : 'No — fixed speed rules.'),
       el('dt', {}, 'Incense'), el('dd', {}, `Blocks hunts ${incenseBlock(g.id)} s · blinds ${g.incenseBlind ?? TIMERS.incenseBlindDefault} s during a hunt.`),
       el('dt', {}, 'Hunt cooldown'), el('dd', {}, `${g.huntCooldown ?? TIMERS.huntCooldownDefault} s`)),
+    renderChase(g),
     el('h3', { style: 'margin:6px 0 0;font:400 14px var(--font-display);color:var(--ink-dim)' }, 'Tells'),
     el('ul', {}, g.tells.map(t => el('li', {}, t))),
     el('div', { class: 'sw' }, el('div', {}, el('b', {}, 'Strength'), g.strengths), el('div', {}, el('b', {}, 'Weakness'), g.weaknesses)));
   root.replaceChildren(el('div', { class: 'sheet-back', onclick: e => { if (e.target === e.currentTarget) close(); } }, sheet));
   sheet.querySelector('button').focus();
+}
+
+/**
+ * "You vs. the ghost" block for the ghost card: your walk / sprint numbers on
+ * a shared scale, then one verdict per ghost speed state so you know whether to
+ * walk, sprint-cycle, loop, or hide.
+ */
+function renderChase(g) {
+  const prof = chaseProfile(g);
+  const lo = 0.4, hi = 3.8, pct = v => ((Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo)) * 100;
+  const scale = el('div', { class: 'chase-scale' },
+    el('div', { class: 'axis' }),
+    // Player reference lines
+    el('div', { class: 'pmark walk', style: `left:${pct(prof.player.walk)}%` }, el('span', {}, `walk ${prof.player.walk}`)),
+    el('div', { class: 'pmark avg', style: `left:${pct(prof.player.sprintAverage)}%` }, el('span', {}, `sprint avg ${prof.player.sprintAverage}`)),
+    el('div', { class: 'pmark sprint', style: `left:${pct(prof.player.sprint)}%` }, el('span', {}, `sprint ${prof.player.sprint}`)),
+    // Ghost envelope
+    el('div', { class: `gband lvl-${prof.worst.level}`, style: `left:${pct(g.speed.min)}%;width:${Math.max(0.8, pct(g.speed.max) - pct(g.speed.min))}%` }));
+  const rows = el('div', { class: 'chase-rows' }, prof.rows.map(r =>
+    el('div', { class: `chase-row lvl-${r.verdict.level}`, title: r.verdict.detail },
+      el('span', { class: 'cl' }, r.label),
+      el('span', { class: 'cm' }, `${fmt(r.mps)} m/s`),
+      el('span', { class: 'cv' }, r.verdict.label))));
+  return el('section', { class: 'chase' },
+    el('h3', { style: 'margin:0 0 6px;font:400 14px var(--font-display);color:var(--ink-dim);display:flex;gap:8px;align-items:center' },
+      'You vs. the ghost', el('span', { class: `verdict lvl-${prof.worst.level}` }, `worst case: ${prof.worst.label}`)),
+    scale, rows,
+    el('p', { class: 'hint', style: 'margin:8px 0 0' }, `You walk at ${prof.player.walk} m/s and sprint at ${prof.player.sprint} m/s for ${prof.player.sprintSeconds} s, then need ${prof.player.sprintCooldownSeconds} s to recharge — cycling that averages ${prof.player.sprintAverage} m/s. ${prof.worst.detail}`));
 }
 
 /* ────────────────────────── speed view ────────────────────────── */

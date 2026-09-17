@@ -251,3 +251,23 @@ tr.hl td { background: rgba(99,217,201,.06); }
 .footnote a { color: var(--ink-dim); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ── you vs. the ghost (ghost card) ────────────────────────── */
+.chase { margin: 4px 0 14px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface-2); }
+.chase .verdict { font: 11px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.lvl-walk   { --lvl: var(--ecto); }
+.lvl-sprint { --lvl: #9ad46a; }
+.lvl-burst  { --lvl: var(--ember); }
+.lvl-hide   { --lvl: var(--blood); }
+.chase .verdict { color: var(--lvl); }
+.chase-scale { position: relative; height: 58px; margin: 4px 0 8px; }
+.chase-scale .axis { position: absolute; left: 0; right: 0; top: 30px; height: 2px; background: var(--line); }
+.chase-scale .pmark { position: absolute; top: 14px; width: 2px; height: 30px; background: var(--ink-dim); }
+.chase-scale .pmark span { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font: 10px var(--font-mono); color: var(--ink-dim); white-space: nowrap; }
+.chase-scale .pmark.sprint span, .chase-scale .pmark.walk span { top: 32px; }
+.chase-scale .gband { position: absolute; top: 27px; height: 8px; border-radius: 4px; background: var(--lvl); opacity: .85; }
+.chase-rows { display: grid; gap: 4px; }
+.chase-row { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; font-size: 13px; padding: 6px 8px; border-radius: 6px; border-left: 3px solid var(--lvl); background: var(--surface); }
+.chase-row .cm { font: 12.5px var(--font-mono); color: var(--ink-dim); white-space: nowrap; }
+.chase-row .cv { font-weight: 600; color: var(--lvl); text-align: right; }
+@media (max-width: 480px) { .chase-row { grid-template-columns: 1fr auto; } .chase-row .cv { grid-column: 1 / -1; text-align: left; } }
