@@ -315,3 +315,26 @@ test('chaseProfile omits a redundant LoS row when a variant already reaches the 
   const twins = chaseProfile(g.twins);
   assert.equal(twins.rows.filter(r => r.label === 'Full line-of-sight chase').length, 1);
 });
+
+/* ───── v0.20.0.0 Resonance updates ───── */
+
+test('v0.20: mid-hunt full door swing narrows to Yurei (+ Mimic)', () => {
+  const s = createState({ difficulty: 'custom0', observations: { hunt_door_full: true } });
+  assert.deepEqual(names(evaluate(s).possible), ['The Mimic', 'Yurei']);
+});
+
+test('v0.20: mid-hunt door swing agrees with Yurei evidence and contradicts non-Yurei evidence', () => {
+  // Yurei evidence (Orbs, Freezing, DOTS) stays consistent with the observation.
+  const yurei = createState({ found: new Set(['orbs', 'freezing', 'dots']), observations: { hunt_door_full: true } });
+  assert.ok(names(evaluate(yurei).possible).includes('Yurei'));
+  // Spirit evidence (EMF, Writing, Spirit Box) + Yurei-only observation leaves nothing real.
+  const spirit = createState({ found: new Set(['emf', 'writing', 'spiritbox']), observations: { hunt_door_full: true } });
+  assert.ok(!names(evaluate(spirit).possible).includes('Spirit'));
+});
+
+test('v0.20: voice-request caveats are on the door and throw observations', () => {
+  const obs = Object.fromEntries(OBSERVATIONS.map(o => [o.id, o]));
+  assert.match(obs.door_closed.note, /v0\.20/);
+  assert.match(obs.multi_throw.note, /v0\.20/);
+  assert.equal(obs.hunt_door_full.tier, 'veteran');
+});

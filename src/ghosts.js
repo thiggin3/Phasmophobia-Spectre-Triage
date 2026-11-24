@@ -1,9 +1,10 @@
 /**
  * ghosts.js — Phasmophobia ghost database.
  *
- * Data reflects the live game as of v0.19.0.2 (16 Sep 2026): the 24 legacy
+ * Data reflects the live game as of v0.20.0.0 Resonance (24 Nov 2026): the 24 legacy
  * ghosts plus Dayan, Obambo, Gallu (v0.15.1 Winter's Jest), Kormos, Aswang
- * (v0.17.x) and Deildegast (v0.18.0). Evidence names use the in-game journal
+ * (v0.17.x) and Deildegast (v0.18.0). Resonance changed the Yurei (doors during
+ * hunts) and Poltergeist (non-throw interactions). Evidence names use the in-game journal
  * terms ("Ultraviolet", not "Fingerprints"; "Incense", not "Smudge Sticks").
  *
  * Every speed is in metres per second. `los` marks whether the ghost gains
@@ -87,10 +88,10 @@ const GHOSTS = [
     tells: [
       '"Explosion" ability throws several objects at once, draining 2% sanity per object to nearby players.',
       'Throws objects farther and more often than any other ghost; throws during hunts.',
-      'Barely does anything in a room with no throwables.'
+      'Since v0.20 it also does normal interactions (doors, switches, etc.), so an empty room no longer shuts it down — but it still throws far more than other ghosts.'
     ],
     strengths: 'Throws many objects at once with great force.',
-    weaknesses: 'Nearly powerless in an empty room.',
+    weaknesses: 'Its explosion needs several throwables nearby; a bare room means no multi-throw tell.',
   },
   {
     id: 'banshee', name: 'Banshee',
@@ -180,9 +181,10 @@ const GHOSTS = [
     speed: { base: 1.7, los: true, min: 1.7, max: 1.7 * LOS_MULTIPLIER, note: 'Standard 1.7 m/s, LoS speed-up.' },
     tells: [
       'Only ghost that fully CLOSES a door outside of hunts (its ability), draining 15% sanity from players within 7.5 m.',
-      'Incense traps it in its current room (stops roaming) for 90 s.'
+      'Incense traps it in its current room (stops roaming) for 90 s.',
+      'Since v0.20 it can fully open and close doors DURING hunts, and moves doors faster than other ghosts (in and out of hunts).'
     ],
-    strengths: 'Door-slam ability drains sanity.',
+    strengths: 'Door-slam ability drains sanity; can open/close doors mid-hunt.',
     weaknesses: 'Incense stops it wandering for 90 s.',
   },
   {

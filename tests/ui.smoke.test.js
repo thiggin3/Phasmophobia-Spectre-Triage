@@ -116,3 +116,8 @@ test('no horizontal overflow at phone width', async () => {
 test('no JS errors across the whole session', () => {
   assert.deepEqual(errors.filter(e => !/fonts\.g|ERR_INTERNET|net::/.test(e)), []);
 });
+
+test('v0.20 Resonance: header and sources show the current patch', async () => {
+  assert.match(await page.locator('#patch-label').textContent(), /v0\.20/);
+  assert.match(await page.locator('#sources').textContent(), /v0\.20\.0\.0 Resonance/);
+});

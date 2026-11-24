@@ -101,3 +101,10 @@ test('every ghost has at least two tells and both strengths/weaknesses text', ()
     assert.ok(g.strengths && g.weaknesses, `${g.name} needs strengths/weaknesses`);
   }
 });
+
+test('v0.20 Resonance: Yurei and Poltergeist tells reflect the new behaviour', () => {
+  const g = Object.fromEntries(GHOSTS.map(x => [x.id, x]));
+  assert.ok(g.yurei.tells.some(t => /DURING hunts/.test(t)), 'Yurei mid-hunt door tell missing');
+  assert.ok(g.poltergeist.tells.some(t => /v0\.20/.test(t)), 'Poltergeist interaction tell missing');
+  assert.ok(!g.poltergeist.tells.some(t => /Barely does anything/.test(t)), 'outdated Poltergeist tell still present');
+});

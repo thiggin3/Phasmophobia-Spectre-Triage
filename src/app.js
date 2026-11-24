@@ -385,8 +385,8 @@ function renderJournal() {
       el('td', {}, g.tells[0])));
   }
   tbl.append(body);
-  $('#sources').innerHTML = 'Data current to Phasmophobia v0.19.0.2 (16 Sep 2026). Thresholds are average team sanity unless marked "target". Speeds in m/s; player walk 1.6, sprint 3.0 for 3 s. ' +
-    'Sources: Kinetic Games patch notes (v0.15.1 Winter\'s Jest, v0.17.x, v0.18.0, v0.19.x), Phasmophobia community wiki, Steam community complete ghost guide (Deildegast edition). ' +
+  $('#sources').innerHTML = 'Data current to Phasmophobia v0.20.0.0 Resonance (24 Nov 2026). Thresholds are average team sanity unless marked "target". Speeds in m/s; player walk 1.6, sprint 3.0 for 3 s. ' +
+    'Sources: Kinetic Games patch notes (v0.15.1 Winter\'s Jest, v0.17.x, v0.18.0, v0.19.x, v0.20.0.0 Resonance), Phasmophobia community wiki, Steam community complete ghost guide (Deildegast edition). ' +
     'Cadence-to-speed calibration is a community approximation — treat BPM as a guide, m/s brackets as the truth.';
 }
 

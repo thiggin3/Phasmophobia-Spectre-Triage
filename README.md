@@ -1,6 +1,6 @@
 # Spectre Triage — Phasmophobia ghost identification app
 
-Second-screen triage tool for identifying all 30 Phasmophobia ghosts (data current to v0.19.0.2, Sep 2026).
+Second-screen triage tool for identifying all 30 Phasmophobia ghosts (data current to v0.20.0.0 Resonance, Nov 2026).
 
 ## Layout
 - `src/ghosts.js`   — ghost database (evidence, hunt thresholds, speeds, tells, timers)
