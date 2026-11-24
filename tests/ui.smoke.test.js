@@ -121,3 +121,40 @@ test('v0.20 Resonance: header and sources show the current patch', async () => {
   assert.match(await page.locator('#patch-label').textContent(), /v0\.20/);
   assert.match(await page.locator('#sources').textContent(), /v0\.20\.0\.0 Resonance/);
 });
+
+test('app icons are in <head> and every icon decodes at its declared size', async () => {
+  const icons = await page.evaluate(async () => {
+    const links = [...document.head.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]')];
+    return Promise.all(links.map(l => new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve({ rel: l.rel, sizes: l.getAttribute('sizes'), w: img.naturalWidth, h: img.naturalHeight });
+      img.onerror = () => resolve({ rel: l.rel, sizes: l.getAttribute('sizes'), w: 0, h: 0 });
+      img.src = l.href;
+    })));
+  });
+  assert.equal(icons.length, 3, 'expected 32px, 192px and apple-touch icons');
+  for (const i of icons) {
+    const [w, h] = i.sizes.split('x').map(Number);
+    assert.equal(i.w, w, `${i.rel} ${i.sizes} decoded at ${i.w}px`);
+    assert.equal(i.h, h);
+  }
+  assert.ok(icons.some(i => i.rel === 'apple-touch-icon'));
+  assert.equal(await page.locator('head meta[name="theme-color"]').getAttribute('content'), '#0a0c11');
+});
+
+test('header shows the app logo next to the title', async () => {
+  const logo = page.locator('.topbar .brand .brand-logo');
+  await logo.waitFor();
+  const info = await logo.evaluate(img => ({
+    loaded: img.complete && img.naturalWidth > 0,
+    natural: img.naturalWidth,
+    shown: img.getBoundingClientRect().width,
+    alt: img.getAttribute('alt'),
+    beforeTitle: img.nextElementSibling?.tagName,
+  }));
+  assert.ok(info.loaded, 'logo image failed to decode');
+  assert.equal(info.natural, 192);
+  assert.ok(info.shown >= 28 && info.shown <= 40, `logo rendered at ${info.shown}px`);
+  assert.equal(info.alt, '', 'logo is decorative; the h1 names the app');
+  assert.equal(info.beforeTitle, 'H1');
+});

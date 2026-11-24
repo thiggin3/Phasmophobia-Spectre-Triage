@@ -52,6 +52,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focu
 }
 .brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
 .brand h1 { font: 400 26px/1 var(--font-display); letter-spacing: .02em; margin: 0; color: var(--ink); text-wrap: balance; }
+/* App logo beside the title: same art as the favicon, with a faint ecto glow. */
+.brand-logo { width: 36px; height: 36px; flex: none; align-self: center; border-radius: 9px;
+  filter: drop-shadow(0 0 6px rgba(99, 217, 201, .35)); }
+/* Phones: keep the title on one line; the version label wraps beneath it. */
+@media (max-width: 420px) {
+  .brand { flex-wrap: wrap; row-gap: 2px; }
+  .brand h1 { white-space: nowrap; }
+  .brand-logo { width: 30px; height: 30px; border-radius: 7px; }
+  .brand small { flex-basis: 100%; padding-left: 40px; }
+}
 .brand small { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); letter-spacing: .08em; text-transform: uppercase; }
 
 .seg { display: inline-flex; flex-wrap: wrap; max-width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 3px; gap: 2px; }
